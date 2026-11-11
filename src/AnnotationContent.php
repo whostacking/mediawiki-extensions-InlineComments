@@ -325,4 +325,46 @@ class AnnotationContent extends JsonContent {
 		}
 		return new AnnotationContent( FormatJson::encode( $data, true, FormatJson::UTF8_OK ) );
 	}
+
+	/**
+	 * Remove a specific comment from an annotation item
+	 *
+	 * @param string $itemId
+	 * @param int $commentIdx
+	 * @param User $user
+	 * @param Title $title
+	 * @return AnnotationContent
+	 * @throws LogicException
+	 */
+	public function removeComment(
+		string $itemId,
+		int $commentIdx,
+		User $user,
+		Title $title
+	) {
+		$data = $this->getData()->getValue();
+		for ( $i = 0; $i < count( $data ); $i++ ) {
+			if ( $data[$i]['id'] === $itemId ) {
+				if ( !isset( $data[$i]['comments'][$commentIdx] ) ) {
+					throw new LogicException( 'No comment by that ID' );
+				}
+				$commentActorId = $data[$i]['comments'][$commentIdx]['actorId'] ?? 0;
+				$commentAuthor = User::newFromActorId( $commentActorId );
+
+				if ( !$user->equals( $commentAuthor ) ) {
+					throw new LogicException( 'Unauthorized to delete this comment' );
+				}
+
+				unset( $data[$i]['comments'][$commentIdx] );
+				$data[$i]['comments'] = array_values( $data[$i]['comments'] );
+
+				if ( count( $data[$i]['comments'] ) === 0 ) {
+					unset( $data[$i] );
+					$data = array_values( $data );
+				}
+				break;
+			}
+		}
+		return new AnnotationContent( FormatJson::encode( $data, true, FormatJson::UTF8_OK ) );
+	}
 }

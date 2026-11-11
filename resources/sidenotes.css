@@ -2,44 +2,82 @@ html {
 	scroll-behavior: smooth;
 }
 
-@media screen and not ( min-width: 600px ) {
-	#mw-content-text #mw-inlinecomment-annotations .mw-inlinecomment-aside {
-		/* In mobile view, force JS not to absolutely position */
-		position: static !important;
-	}
-
-	#mw-content-text #mw-inlinecomments-precontainer {
-		width: 100% !important;
-	}
-
-	#mw-content-text #mw-inlinecomment-annotations .mw-inlinecomment-aside.mw-inlinecomment-selected {
-		margin-left: 5px;
-	}
+/*
+ * Annotations are positioned beside the highlighted text (FloatingUI style)
+ * inside the parser output, which is the positioning context. This works in
+ * all skins, not just legacy Vector.
+ */
+.mw-parser-output.mw-inlinecomments-content {
+	position: relative;
 }
 
-#mw-content-text #mw-inlinecomment-annotations {
+#mw-inlinecomment-annotations {
+	margin-top: 1em;
+	color: var( --color-base, #202122 );
+}
+
+/*
+ * Each aside lives in the DOM but is invisible by default. It fades in beside
+ * its highlight on hover, and fades out when the mouse leaves both the text
+ * and the panel. Clicking makes it "selected" (stays open). If the comment
+ * input box is visible, the panel never hides on mouseleave.
+ */
+#mw-inlinecomment-annotations .mw-inlinecomment-aside {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	box-sizing: border-box;
 	width: max-content;
-	margin-top: 1%;
+	max-width: 280px;
+	min-width: 200px;
+	opacity: 0;
+	visibility: hidden;
+	transform: scale(0.95) translateY(-4px);
+	transition: opacity var( --transition-duration-medium, 250ms ) cubic-bezier(0.4, 0, 0.2, 1),
+	            transform var( --transition-duration-medium, 250ms ) cubic-bezier(0.4, 0, 0.2, 1),
+	            visibility 0s linear 0s;
+	border: 1px solid var( --border-color-base, #a2a9b1 );
+	border-radius: 6px;
+	padding: 1rem;
+	background-color: var( --background-color-neutral, #eaecf0 );
+	color: var( --color-base, #202122 );
+	z-index: 1000;
+	box-shadow: var( --box-shadow-medium, 0 4px 4px 0 rgba(0, 0, 0, 0.06), 0 0 8px 0 rgba(0, 0, 0, 0.06) );
 }
 
-#mw-inlinecomments-precontainer {
-	padding-right: 3rem;
+/* Fade-in / visible state */
+#mw-inlinecomment-annotations .mw-inlinecomment-aside.mw-inlinecomment-visible,
+#mw-inlinecomment-annotations .mw-inlinecomment-aside:hover {
+	opacity: 1;
+	visibility: visible;
+	transform: scale(1) translateY(0);
+	transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+	            transform 180ms cubic-bezier(0.4, 0, 0.2, 1),
+	            visibility 0s linear 0s;
 }
 
-#mw-inlinecomments-precontainer p {
-	width: 98%;
+/* Selected (sticky open via click) */
+#mw-inlinecomment-annotations .mw-inlinecomment-aside.mw-inlinecomment-selected {
+	opacity: 1;
+	visibility: visible;
+	transform: scale(1) translateY(0);
+	transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+	            transform 180ms cubic-bezier(0.4, 0, 0.2, 1),
+	            visibility 0s linear 0s;
+	background-color: var( --background-color-neutral-subtle, #f8f9fa );
+	border-color: var( --border-color-subtle, #c8ccd1 );
+	box-shadow: 0 6px 16px var( --box-shadow-color-alpha-base, rgba( 0, 0, 0, 0.16 ) );
 }
 
-#mw-content-text #mw-inlinecomment-annotations .mw-inlinecomment-aside {
-	/* js sets position absolute to have good non-js fallback */
-	width: 260px;
-	transition: all 300ms cubic-bezier( 0.655, 0.18, 0.3, 1.255 );
-	left: 10px;
-	border: 1px #a2a9b1 solid;
-	border-radius: 2px;
-	padding: 3px 14px 0px 14px;
-	margin-bottom: 10px;
-	background-color: #eaecf0;
+/* Nested/reply comments stack on top of their parent via DOM order.
+   The last-added aside is on top (highest z-index). */
+#mw-inlinecomment-annotations .mw-inlinecomment-aside {
+	z-index: auto;
+}
+#mw-inlinecomment-annotations > *:last-child.mw-inlinecomment-aside {
+	/* last child (newest/reply) gets highest z-index */
+	z-index: 1001;
 }
 
 /* Prevent resizing textboxes greater than element size. */
@@ -47,17 +85,36 @@ html {
 	max-width: 100%;
 }
 
-#mw-content-text #mw-inlinecomment-annotations .mw-inlinecomment-aside p {
-	text-align: left;
+/*
+ * The panel is laid out with flexbox: every part (comment text, author,
+ * buttons, reply form) is a flex child and spacing comes from `gap`, not
+ * from margins on individual elements.
+ */
+#mw-inlinecomment-annotations .mw-inlinecomment-text {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
-#mw-content-text #mw-inlinecomment-annotations .mw-inlinecomment-aside.mw-inlinecomment-selected {
-	left: -10px;
-	opacity: 1;
-	z-index: 1;
-	background-color: #f8f9fa;
-	border: 1px #c8ccd1 solid;
-	box-shadow: 0px 0px 30px #999;
+#mw-inlinecomment-annotations .mw-inlinecomment-comment {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 6px;
+	width: 100%;
+}
+
+#mw-inlinecomment-annotations .mw-inlinecomment-comment > div:first-child {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+#mw-inlinecomment-annotations .mw-inlinecomment-aside p {
+	text-align: left;
+	margin: 0;
 }
 
 .mw-inlinecomment-author:before {
@@ -65,89 +122,175 @@ html {
 }
 
 .mw-inlinecomment-author {
-	font-size: small;
-	padding-left: 1em;
-	margin-bottom: 15px;
+	color: var( --color-subtle, #54595d );
+	font-size: var( --font-size-small, 0.875rem );
+	line-height: normal;
 }
 
+/* Tools are hidden until the panel is visible/hovered/selected. */
 .mw-inlinecomment-tools {
 	display: none;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* Show the Reply/Close tools when the panel is visible, hovered, or selected */
+.mw-inlinecomment-aside.mw-inlinecomment-visible .mw-inlinecomment-tools,
+.mw-inlinecomment-aside:hover .mw-inlinecomment-tools,
+.mw-inlinecomment-aside.mw-inlinecomment-selected .mw-inlinecomment-tools {
+	display: flex;
 }
 
 .mw-inlinecomment-inittools,
 .mw-inlinecomment-selected .mw-inlinecomment-tools {
-	display: block;
-	margin: 14px 0px 12px 0;
-	padding: 7px 5px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
-.mw-inlinecomment-inittools .mw-inlinecomment-buttons,
-.mw-inlinecomment-selected .mw-inlinecomment-buttons {
-	margin-top: 15px;
+.mw-inlinecomments-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mw-inlinecomment-buttons {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 
 #mw-content-text .mw-annotation-highlight:hover,
-#mw-content-text .mw-annotation-highlight:hover .mw-annotation-highlight
-{
-	background-color: var( --sidenoteAnchorColorHover, rgba( 247, 207, 105, 0.7137254902 ) );
+#mw-content-text .mw-annotation-highlight:hover .mw-annotation-highlight {
+	background-color: var( --inlinecomments-anchor--hover, rgba( 247, 207, 105, 0.7137254902 ) 
+	);
 }
 
 #mw-content-text .mw-annotation-highlight.mw-annotation-selected,
-#mw-content-text .mw-annotation-highlight.mw-annotation-selected .mw-annotation-highlight
-{
-	background-color: var( --sidenoteAnchorColorSelected, #f5c955 );
+#mw-content-text .mw-annotation-highlight.mw-annotation-selected .mw-annotation-highlight {
+	background-color: var( --inlinecomments-anchor--selected, #f5c955 )
 }
 
 #mw-content-text .mw-annotation-highlight {
-	background-color: var( --sidenoteAnchorColor, #f8e4b1 );
-	/* context-menu isn't technically right, but it looks like a comment */
+	background-color: var( --inlinecomments-anchor, #f8e4b1 );
 	cursor: context-menu;
 }
 
 .userAutocompleteDropdown {
+	box-sizing: border-box;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
 	border-style: solid;
 	border-width: 0.5px;
+	border-color: var( --border-color-base, #a2a9b1 );
+	background-color: var( --background-color-base, #fff );
+	color: var( --color-base, #202122 );
 }
 
 .userAutocompleteDropdownItem {
 	display: block;
 	padding: 3px;
 	text-decoration: none;
-	color: black;
+	color: var( --color-base, #202122 );
 }
 
 .userAutocompleteDropdownItem:hover {
-	background-color: #2a4b8d;
-	color: white;
+	background-color: var( --color-progressive, #36c );
+	color: var( --color-inverted, #fff );
 	text-decoration: none;
 }
 
-.mw-inlinecomment-editlink {
+/*
+ * Icon buttons use Codex SVG assets painted through a CSS mask, following the
+ * Citizen skin pattern. The SVG itself carries no color; the button's
+ * `color` is used as the mask color, so icons adapt to light/dark themes.
+ */
+.mw-inlinecomment-editlink,
+.mw-inlinecomment-copylink,
+.mw-inlinecomment-delete-reply {
 	all: unset;
 	cursor: pointer;
-	font-size: x-large;
-	padding: 0;
-	height: min-content;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 24px;
+	height: 24px;
+	border-radius: 2px;
+	vertical-align: middle;
+	transition: background-color 120ms ease, color 120ms ease;
+}
+
+.mw-inlinecomment-editedlabel {
+	color: var( --color-subtle, #54595d );
+}
+
+.mw-inlinecomment-editlink::before,
+.mw-inlinecomment-copylink::before,
+.mw-inlinecomment-delete-reply::before {
+	content: '';
+	display: block;
+	width: 20px;
+	height: 20px;
+	background-color: currentColor;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-size: 20px 20px;
+	mask-size: 20px 20px;
+}
+
+.mw-inlinecomment-editlink {
+	color: var( --color-progressive, #36c );
+}
+
+.mw-inlinecomment-editlink::before {
+	-webkit-mask-image: url( assets/images/cdxIconEdit.svg );
+	mask-image: url( assets/images/cdxIconEdit.svg );
 }
 
 .mw-inlinecomment-editlink:hover {
-	font-weight: bold;
+	background-color: var( --background-color-progressive-subtle, rgba( 54, 104, 204, 0.1 ) );
+}
+
+.mw-inlinecomment-copylink {
+	color: var( --color-progressive, #36c );
+}
+
+.mw-inlinecomment-copylink::before {
+	-webkit-mask-image: url( assets/images/cdxIconLink.svg );
+	mask-image: url( assets/images/cdxIconLink.svg );
+}
+
+.mw-inlinecomment-copylink:hover {
+	background-color: var( --background-color-progressive-subtle, rgba( 54, 104, 204, 0.1 ) );
+}
+
+.mw-inlinecomment-delete-reply {
+	color: var( --color-destructive, #bf3c2c );
+}
+
+.mw-inlinecomment-delete-reply::before {
+	-webkit-mask-image: url( assets/images/cdxIconTrash.svg );
+	mask-image: url( assets/images/cdxIconTrash.svg );
+}
+
+.mw-inlinecomment-delete-reply:hover {
+	background-color: rgba( 191, 60, 44, 0.1 );
 }
 
 .mw-inlinecomments-editedlabel {
-	color: gray;
-	margin-bottom: 1rem;
-	margin-right: 2.5rem;
+	color: var( --color-subtle, #54595d );
 }
 
 .mw-inlinecomment-selected .mw-inlinecomment-comment.currentedit {
-	background: aliceblue;
+	background: var( --background-color-progressive-subtle, #e8eeff );
 	border-style: solid;
 	border-width: 0.5px;
-	border-color: blue;
+	border-color: var( --color-progressive, #36c );
 	padding-left: 0.5rem;
 	padding-bottom: 0.5rem;
 }
@@ -156,9 +299,11 @@ html {
 	display: none !important;
 }
 
-.mw-inlinecomment-comment {
-	width: 100%;
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
+/*
+ * Narrow viewports: annotations stay beside the text but cap width.
+ */
+@media screen and ( max-width: 599px ) {
+	#mw-inlinecomment-annotations .mw-inlinecomment-aside {
+		max-width: calc( 100% - 20px );
+	}
 }

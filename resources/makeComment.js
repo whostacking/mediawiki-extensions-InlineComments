@@ -96,7 +96,7 @@
 			if ( this.classList.contains( newClass ) ) {
 				// If we don't have the class, that means the user cancelled.
 				event.stopPropagation();
-				mw.inlineComments.manager.select( asideId, mw.inlineComments.manager.getOffset( this ) );
+				mw.inlineComments.manager.toggleSelect( asideId );
 			}
 		};
 		var textContent = '';
@@ -345,7 +345,7 @@
 
 				$highlightedSpan[0].addEventListener( 'click', function( event ) {
 					event.stopPropagation();
-					mw.inlineComments.manager.select( asideElm.id, mw.inlineComments.manager.getOffset( this ) );
+					mw.inlineComments.manager.toggleSelect( asideElm.id );
 				}, true );
 
 				// Also remove the comment-creation interface -
@@ -362,6 +362,11 @@
 
 				var asideElmOffset = mw.inlineComments.manager.getOffset( asideElm );
 				mw.inlineComments.manager.addTools( asideElm, asideElmOffset );
+
+				// Once the new comment is saved, drop the sticky selection so
+				// the panel goes back to normal hover behavior and fades out
+				// when the user moves off the annotated text.
+				mw.inlineComments.manager.deselect( asideElm.id );
 
 			} ).fail( function ( code, data ) {
 				mw.notify( api.getErrorMessage( data ), { type: 'error' } );
@@ -476,7 +481,10 @@
 
 		var sidenoteContainer = document.getElementById( 'mw-inlinecomment-annotations' );
 		if ( !sidenoteContainer ) {
-			var sidenoteParent = document.getElementById( 'content' );
+			var sidenoteParent = document.querySelector( '#mw-content-text > .mw-parser-output' );
+			if ( !sidenoteParent ) {
+				sidenoteParent = document.getElementById( 'content' );
+			}
 			sidenoteContainer = document.createElement( 'div' );
 			sidenoteContainer.id = 'mw-inlinecomment-annotations';
 			sidenoteParent.appendChild( sidenoteContainer );

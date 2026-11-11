@@ -123,7 +123,8 @@ class AnnotationFormatter extends HtmlFormatter {
 					$comment['actorId'],
 					$timestamp,
 					$commentText,
-					$canEdit
+					$canEdit,
+					$annotation['id']
 				)[ 'commentHTML' ];
 			}
 			$textDiv = Html::rawElement(

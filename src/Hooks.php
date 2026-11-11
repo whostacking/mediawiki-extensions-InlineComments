@@ -9,10 +9,12 @@ use MediaWiki\Extension\Notifications\AttributeManager;
 use MediaWiki\Extension\Notifications\UserLocator;
 use MediaWiki\Language\Language;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Hook\SkinTemplateNavigation__UniversalHook;
 use MediaWiki\Output\Hook\BeforePageDisplayHook;
 use MediaWiki\Page\WikiPageFactory;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\Settings\SettingsBuilder;
+use MediaWiki\Skin\SkinTemplate;
 use MediaWiki\Storage\Hook\MultiContentSaveHook;
 use MediaWiki\Title\Title;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
@@ -22,6 +24,7 @@ use Wikimedia\Rdbms\ILoadBalancer;
 class Hooks implements
 	BeforePageDisplayHook,
 	MultiContentSaveHook,
+	SkinTemplateNavigation__UniversalHook,
 	UserGetReservedNamesHook
 {
 	private AnnotationFetcher $annotationFetcher;
@@ -76,6 +79,9 @@ class Hooks implements
 		$canViewComments = $this->permissionManager->userHasRight(
 			$out->getUser(),
 			'inlinecomments-view'
+		) && (
+			!$out->getUser()->isAnon() ||
+			$this->config->get( 'InlineCommentsAnonsCanView' )
 		);
 		if ( !$canViewComments ) {
 			return;
@@ -95,6 +101,8 @@ class Hooks implements
 			$out->addModules( 'ext.inlineComments.makeComment' );
 		}
 
+		$out->addJsConfigVars( 'wgInlineCommentsCanEdit', $canEditComments );
+
 		// TODO: Should page previews have annotations?
 		$annotations = $this->annotationFetcher->getAnnotations( (int)$out->getRevisionId() );
 		if ( !$annotations || $annotations->isEmpty() ) {
@@ -112,7 +120,6 @@ class Hooks implements
 		);
 		$out->addHtml( $result );
 
-		$out->addJsConfigVars( 'wgInlineCommentsCanEdit', $canEditComments );
 		$out->addModules( 'ext.inlineComments.sidenotes' );
 		$out->addModuleStyles( 'ext.inlineComments.sidenotes.styles' );
 	}
@@ -270,5 +277,36 @@ class Hooks implements
 				$config->get( MainConfigNames::ContentNamespaces )
 			);
 		}
+	}
+
+	/**
+	 * @param SkinTemplate $sktemplate
+	 * @param array &$links
+	 */
+	public function onSkinTemplateNavigation__Universal( $sktemplate, &$links ): void {
+		if ( !isset( $links['user-menu'] ) ) {
+			return;
+		}
+		if ( isset( $links['user-menu']['inlinecomments'] ) ) {
+			return;
+		}
+		// Link to the special page listing inline comments for the current page
+		$title = null;
+		if ( method_exists( $sktemplate, 'getRelevantTitle' ) ) {
+			$title = $sktemplate->getRelevantTitle();
+		}
+		if ( !$title ) {
+			$title = $sktemplate->getTitle();
+		}
+		$href = $title ?
+			Title::makeTitle( NS_SPECIAL, 'InlineComments' )
+				->getLocalURL( [ 'page' => $title->getPrefixedText() ] ) :
+			Title::makeTitle( NS_SPECIAL, 'InlineComments' )->getLocalURL();
+		$links['user-menu']['inlinecomments'] = [
+			'text' => $sktemplate->msg( 'inlinecomments-view-inline-comments' )->text(),
+			'href' => $href,
+			'active' => false,
+			'icon' => 'speechBubbles',
+		];
 	}
 }

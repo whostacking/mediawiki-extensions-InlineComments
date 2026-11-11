@@ -1,0 +1,64 @@
+/**
+ * Shared colour tokens for InlineComments.
+ * 
+ * Uses Codex design tokens where available, with hex fallbacks for skins
+ * that do not provide them. Theme switching is handled via
+ * .skin-theme-clientpref-day, .skin-theme-clientpref-night, and
+ * .skin-theme-clientpref-os.
+ */
+
+:root {
+	--inlinecomments-panel-width: 260px;
+	--inlinecomments-gutter: 300px;
+
+	/* Text colors -- mapped to Codex color-tokens */
+	--inlinecomments-text: var( --color-base, #202122 );
+	--inlinecomments-text-subtle: var( --color-subtle, #54595d );
+	--inlinecomments-inverted: var( --color-inverted, #fff );
+	--inlinecomments-link: var( --color-progressive, #36c );
+	--inlinecomments-link--hover: var( --color-progressive--hover, #3056a9 );
+	--inlinecomments-progressive: var( --color-progressive, #36c );
+	--inlinecomments-progressive-subtle: var( --background-color-progressive-subtle, #e8eeff );
+
+	/* Background colors -- mapped to Codex background-color tokens */
+	--inlinecomments-surface: var( --background-color-neutral, #eaecf0 );
+	--inlinecomments-surface-raised: var( --background-color-neutral-subtle, #f8f9fa );
+	--inlinecomments-surface-input: var( --background-color-base, #fff );
+
+	/* Border colors -- mapped to Codex border-color tokens */
+	--inlinecomments-border: var( --border-color-base, #a2a9b1 );
+	--inlinecomments-border-subtle: var( --border-color-subtle, #c8ccd1 );
+	--inlinecomments-border-emphasized: var( --border-color-emphasized, #202122 );
+
+	/* Shadow colors -- mapped to Codex box-shadow-color tokens */
+	--inlinecomments-shadow: var( --box-shadow-color-alpha-base, rgba( 0, 0, 0, 0.06 ) );
+	--inlinecomments-shadow-strong: rgba( 0, 0, 0, 0.25 );
+
+	/* Highlights on the article text */
+	--inlinecomments-anchor: #f8e4b1;
+	--inlinecomments-anchor--hover: rgba( 247, 207, 105, 0.72 );
+	--inlinecomments-anchor--selected: #f5c955;
+
+	/* Diff colours, preserving the meaning of the original palette */
+	--inlinecomments-diff-added: var( --background-color-success-subtle, #dff2eb );
+	--inlinecomments-diff-removed: var( --background-color-error-subtle, #ffe9e5 );
+	--inlinecomments-diff-changed: var( --background-color-warning-subtle, #fdf2d5 );
+	--inlinecomments-diff-unchanged: var( --background-color-neutral-subtle, #f8f9fa );
+	--inlinecomments-diff-target: var( --background-color-target-text, #ffead4 );
+}
+
+/* Forced night mode */
+:root.skin-theme-clientpref-night:not(.client-darkmode) {
+	--inlinecomments-anchor: rgba( 245, 201, 85, 0.22 );
+	--inlinecomments-anchor--hover: rgba( 245, 201, 85, 0.36 );
+	--inlinecomments-anchor--selected: rgba( 245, 201, 85, 0.55 );
+}
+
+/* Automatic night mode, following the operating system preference */
+@media screen and ( prefers-color-scheme: dark ) {
+	:root.skin-theme-clientpref-os:not(.client-darkmode) {
+		--inlinecomments-anchor: rgba( 245, 201, 85, 0.22 );
+		--inlinecomments-anchor--hover: rgba( 245, 201, 85, 0.36 );
+		--inlinecomments-anchor--selected: rgba( 245, 201, 85, 0.55 );
+	}
+}

@@ -27,9 +27,15 @@
 		"MediaWikiServices": "service",
 		"MultiContentSave": "main",
 		"UserGetReservedNames": "main",
+		"SkinTemplateNavigation::Universal": "main",
 		"BeforeCreateEchoEvent": "MediaWiki\\Extension\\InlineComments\\Hooks::onBeforeCreateEchoEvent",
 		"ListDefinedTags": "MediaWiki\\Extension\\InlineComments\\Hooks::onListDefinedTags",
 		"ChangeTagsListActive": "MediaWiki\\Extension\\InlineComments\\Hooks::onChangeTagsListActive"
+	},
+	"SpecialPages": {
+		"InlineComments": {
+			"class": "MediaWiki\\Extension\\InlineComments\\Special\\SpecialInlineComments"
+		}
 	},
 	"HookHandlers": {
 		"main": {
@@ -78,6 +84,12 @@
 				"WikiPageFactory",
 				"InlineComments:AnnotationUtils"
 			]
+		},
+		"inlinecomments-delete-reply": {
+			"class": "MediaWiki\\Extension\\InlineComments\\Api\\ApiDeleteReply",
+			"services": [
+				"WikiPageFactory"
+			]
 		}
 	},
 	"ServiceWiringFiles": [
@@ -91,6 +103,10 @@
 		"InlineCommentsNamespaces": {
 			"value": null,
 			"description": "Namespaces for which InlineComments should be enabled"
+		},
+		"InlineCommentsAnonsCanView": {
+			"value": true,
+			"description": "Whether anonymous users are allowed to see inline comments"
 		}
 	},
 	"callback": "MediaWiki\\Extension\\InlineComments\\Hooks::setDefaultNamespaces",
@@ -104,11 +120,15 @@
 				"edit",
 				"inlinecomments-addcomment-reply",
 				"inlinecomments-addcomment-close",
+				"inlinecomments-delete-reply",
 				"inlinecomments-addcomment-save",
 				"inlinecomments-addcomment-cancel",
 				"inlinecomments-placeholder",
 				"inlinecomments-editcomment-publish",
 				"inlinecomments-edited-label",
+				"inlinecomments-copy-link",
+				"inlinecomments-copy-link-copied",
+				"inlinecomments-copy-link-failed",
 				"parentheses"
 			],
 			"dependencies": [
@@ -117,13 +137,17 @@
 			]
 		},
 		"ext.inlineComments.sidenotes.styles": {
-			"styles": "sidenotes.css"
+			"styles": [
+				"theme.css",
+				"sidenotes.css"
+			]
 		},
 		"ext.inlineComments.makeComment": {
 			"scripts": [
 				"makeComment.js"
 			],
 			"styles": [
+				"theme.css",
 				"makeComment.css"
 			],
 			"dependencies": [
@@ -143,6 +167,7 @@
 				"diffHandler.js"
 			],
 			"styles": [
+				"theme.css",
 				"sidenotesDiff.css"
 			]
 		}

@@ -32,7 +32,8 @@ class AnnotationUtils {
 		int $actorId,
 		string $timestamp,
 		string $comment,
-		bool $editable = false
+		bool $editable = false,
+		?string $annotationId = null
 	): array {
 		$this->userIds = [];
 		$commentHTML = preg_replace_callback(
@@ -66,12 +67,38 @@ class AnnotationUtils {
 			[],
 			$commentHTML
 		);
-		if ( $editable ) {
-			$commentHTML .= Html::element(
+		$buttonsHTML = '';
+		if ( $annotationId !== null ) {
+			$buttonsHTML .= Html::element(
 				'button',
-				[ 'class' => 'mw-inlinecomment-editlink', 'title' => wfMessage( 'edit' )->text() ],
-				'🖉'
+				[
+					'class' => 'mw-inlinecomment-copylink',
+					'title' => wfMessage( 'inlinecomments-copy-link' )->text(),
+					'aria-label' => wfMessage( 'inlinecomments-copy-link' )->text(),
+					'data-annotation-id' => $annotationId,
+				]
 			);
+		}
+		if ( $editable ) {
+			$buttonsHTML .= Html::element(
+				'button',
+				[
+					'class' => 'mw-inlinecomment-editlink',
+					'title' => wfMessage( 'edit' )->text(),
+					'aria-label' => wfMessage( 'edit' )->text(),
+				]
+			) .
+			Html::element(
+				'button',
+				[
+					'class' => 'mw-inlinecomment-delete-reply',
+					'title' => wfMessage( 'inlinecomments-delete-reply' )->text(),
+					'aria-label' => wfMessage( 'inlinecomments-delete-reply' )->text(),
+				]
+			);
+		}
+		if ( $buttonsHTML !== '' ) {
+			$commentHTML .= $buttonsHTML;
 		}
 		$commentHTML = Html::rawElement(
 			'div',
